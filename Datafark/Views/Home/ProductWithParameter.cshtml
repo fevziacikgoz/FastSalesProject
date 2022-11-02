@@ -1,0 +1,107 @@
+﻿@using DAL.Model
+@using X.PagedList;
+@using X.PagedList.Mvc.Core;
+@using X.PagedList.Web.Common
+@model IPagedList<Product>
+<link href="~/css/product.css" rel="stylesheet" />
+<script src="~/js/jsevent.js?@DateTime.Now.Ticks"></script>
+
+
+@if(Model.Count > 0)
+{
+    @foreach (var item in Model)
+    {
+
+        <div class="container page-wrapper">
+            <div class="page-inner">
+                <div class="row">
+                    <div class="el-wrapper">
+                        <div class="box-up">
+                            @if (item.ProductImages.Count > 0)
+                            {
+                                <img class="img" src="@item.ProductImages.FirstOrDefault().ImagePath">
+                            }
+                            else
+                            {
+                                <img src="~/images/logo.png">
+                            }
+                            <div class="img-info">
+                                <div class="info-inner">
+                                    @if (item.IsVariant == true)
+                                    {
+                                        <i class="bi bi-info-circle"></i>
+                                    }
+                                    <span class="p-name">@item.Title</span>
+                                    <span class="p-company">@item.ProductSkus.FirstOrDefault().Barcode</span>
+                                </div>
+                                @if (item.IsVariant == true)
+                                {
+                                    <div class="a-size"> Varyantlı Ürün : <span class="size">@string.Join(",", item.ProductSkus.ToList().Select(s => s.VariantPath)) </span></div>
+                                }
+
+                            </div>
+                        </div>
+
+                        <div class="box-down">
+                            <div class="h-bg">
+                                <div class="h-bg-inner"></div>
+                            </div>
+                            @if (item.IsVariant == false)
+                            {
+                                <a class="cart" href="#" data-id="@item.ProductSkus.FirstOrDefault().Id">
+                                    <span class="price">Fiyat : @item.ProductSkus.FirstOrDefault().ProductSkuPrices.Where(w=>w.ProductSkuPriceTypeId==2).FirstOrDefault().Price</span>
+                                    <span class="add-to-cart">
+                                        <span class="txt">Sepete Ekle</span>
+                                    </span>
+                                </a>
+                            }
+                            else
+                            {
+                                <a class="cartvariant" href="#" data-id="@item.Id">
+                                    <span class="price">Fiyat : @item.ProductSkus.FirstOrDefault().ProductSkuPrices.Where(w=>w.ProductSkuPriceTypeId==2).FirstOrDefault().Price</span>
+                                    <span class="add-to-cart">
+                                        <span class="txt">Sepete Ekle</span>
+                                    </span>
+                                </a>
+                            }
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <br />
+    <div style="position: fixed;height: 50px;padding: 5px;top: 135px;">
+        @*  @Html.PagedListPager((IPagedList)Model,page=>  Url.Action("ProductWithParameter" ,
+    new {page= page, categoryId = ViewBag.categoryId , word= ViewBag.word}),
+    PagedListRenderOptions.EnableUnobtrusiveAjaxReplacing(   new AjaxOptions(){  HttpMethod = "GET" ,InsertionMode = InsertionMode.Replace,UpdateTargetId="productList"}),
+    PagedListRenderOptions
+    {
+    ContainerDivClasses = new[] { "navigation" },
+    LiElementClasses = new[] { "page-item" },
+    PageClasses = new[] { "page-link" }
+    } )*@
+
+        @*  @Html.PagedListPager((IPagedList)Model,page=>  Url.Action("ProductWithParameter" ,
+    new {page= page, categoryId = ViewBag.categoryId , word= ViewBag.word}),
+    new  PagedListRenderOptions()
+    {
+    ContainerDivClasses = new[] { "navigation" },
+    LiElementClasses = new[] { "page-item" },
+    PageClasses = new[] { "page-link" }
+    }, new AjaxOptions () {  HttpMethod = "GET" ,InsertionMode = InsertionMode.Replace,UpdateTargetId="productList"}
+
+    )*@
+
+        @Html.PagedListPager(Model, page => Url.Action("ProductWithParameter",
+    new { page= page, categoryId = ViewBag.categoryId , word= ViewBag.word}),
+    PagedListRenderOptions.EnableUnobtrusiveAjaxReplacing(new PagedListRenderOptions()
+    {
+    ContainerDivClasses = new[] { "navigation" },
+    LiElementClasses = new[] { "page-item" },
+    PageClasses = new[] { "page-link" }
+    }, new AjaxOptions() { HttpMethod = "GET" ,InsertionMode = InsertionMode.Replace,UpdateTargetId="productList" }))
+    </div>
+}

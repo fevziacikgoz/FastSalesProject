@@ -1,0 +1,248 @@
+﻿@using DAL.Model
+@model List<BasketDetail>;
+<link href="~/css/minicart.css" rel="stylesheet" />
+<script src="~/js/jsevent.js?@DateTime.Now.Ticks" type="text/javascript"></script>
+<link href="~/js/notifications.css" rel="stylesheet" />
+<script src="~/js/notifications.js"></script>
+
+    <div class="containerchart">
+    <div style="text-align:center;font-size:20px;font-weight:bolder">Sepet</div>
+  
+    @if (Model.Count > 0)
+    {
+        <div class="shopping-cart">
+
+
+            <!--end shopping-cart-header -->
+            <div class="shopping-cart-header">
+                <center><span style="font-size:16px;cursor:pointer;text-decoration:underline" id="cartcustomertitle">@Model.FirstOrDefault().Basket.Customer.Title</span></center>
+
+                @* <i class="fa fa-shopping-cart cart-icon"></i><span class="badge">
+            @Model.Sum(s=>s.Quantity).ToString()
+
+
+
+            </span>
+            <div class="shopping-cart-total">
+            <span class="lighter-text">Total:</span>
+            <span class="main-color-text">
+            @String.Format("{0:F2}", Model.Sum(s=>s.LineTotal))
+
+            TL
+            </span>
+            </div>*@
+
+
+
+
+            </div>
+            <!--end shopping-cart-header -->
+            @foreach (BasketDetail item in Model)
+            {
+                <ul class="shopping-cart-items" data-id="@item.Id">
+                    <li class="clearfix">
+                        <a class="cartdelete" data-id="@item.Id">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                        <a class="cartedit" data-id="@item.Id">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        @if (item.ProductSku.ProductSkuImages.FirstOrDefault() != null)
+                        {
+                            <img src="@item.ProductSku.ProductSkuImages.FirstOrDefault().ImageUrl" />
+                        }
+                        else
+                        {
+                            <img src="~/images/logo.png" />
+                        }
+                        <span class="item-name">@item.ProductSku.Title</span>
+                        <span style="margin-left:5px;">Birim Fiyat :</span>
+                        <span class="item-price">@String.Format("{0:F2}", item.UnitPrice)</span>
+                        <span style="float:left">Miktar :</span>
+                        <input type="number" class="item-quantity" min="1" data-id="@item.Id" value="@String.Format("{0:F0}", item.Quantity).Replace(",",".")" style="width: 60px;margin-left: 5px;border:none">
+                    </li>
+                </ul>
+            }
+
+        </div> <!--end shopping-cart -->
+
+
+        <nav class="navbar-bottomchart">
+            <div class="open-navchart" style="margin-left:-20px;width:25%;min-width:480px;">
+                <div class="shopping-cart" style="padding-top:0px">
+                    <h3 style="float:left;" id="upcart"><i class="bi bi-arrow-bar-up"></i></h3>
+                    <h3 style="float:right;cursor:pointer;display:none" id="closechart"><i class="bi bi-x-circle"></i></h3>
+                    <h3 style="text-align:center;cursor:pointer" id="chartclick">Sepeti Tamamla</h3>
+                   
+                    <div class="shopping-cart-header" style="margin-top:15px;height:70px">
+                        <i class="fa fa-shopping-cart cart-icon"></i><span class="badge">
+                            @Model.Sum(s=>s.Quantity).ToString()
+                        </span>
+                        <div class="shopping-cart-total" >
+                            @if(Model.FirstOrDefault().Basket.DiscountType == 1)
+                            {
+                            <span class="lighter-text">İndirim(Oran):</span>
+                            <span class="main-color-text" style="float:right">%@String.Format("{0:F2}", Model.FirstOrDefault().Basket.Discount)</span><br />
+                            }
+                            @if (Model.FirstOrDefault().Basket.DiscountType == 2)
+                            {
+                                <span class="lighter-text">İndirim(Tutar):</span>
+                                <span class="main-color-text" style="float:right">@String.Format("{0:F2}", Model.FirstOrDefault().Basket.Discount)</span>
+
+                                <br />
+                            }
+                            <span class="lighter-text">Kdv :</span>
+                            <span class="main-color-text" style="float:right">@String.Format("{0:F2}", Model.FirstOrDefault().Basket.InvoicTaxTotal) TL</span><br />
+                            <span class="lighter-text">Kdv Matrahı :</span>
+                            <span class="main-color-text" style="float:right">@String.Format("{0:F2}",Model.FirstOrDefault().Basket.InvoiceTotal) TL</span>
+                        </div>
+                    </div>
+                    <button  type="button" class="btn btn-light btn-sm " style="float:left;margin-top:5px" data-id="@Model.FirstOrDefault().BasketId" onclick="getbasketeditmodal()">
+                        <i class="bi bi-percent"></i> Sepet İndirimi Yap
+                    </button>
+                    <button type="button" id="totalprice" class="btn btn-success btn-sm main-color-text " style="float:right;margin-top:5px;margin-left:10px;color:white" data-id="@Model.FirstOrDefault().BasketId" value="@String.Format("{0:F2}", Model.FirstOrDefault().Basket.InvoiceTotal +  Model.FirstOrDefault().Basket.InvoicTaxTotal)">
+                        Ödeme :  @String.Format("{0:F2}", Model.FirstOrDefault().Basket.InvoiceTotal +  Model.FirstOrDefault().Basket.InvoicTaxTotal) TL
+                    </button>
+
+
+                    <div id="payout" style="margin-top:60px">
+                        <button type="button" class="btn btn-primary btn-sm " style="" data-id="@Model.FirstOrDefault().BasketId" onclick="payout(this,@Model.FirstOrDefault().BasketId,'cash',0)">
+                            <i class="bi bi-cash-coin"></i> Nakit
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm " style="" data-id="@Model.FirstOrDefault().BasketId" onclick="payout(this,@Model.FirstOrDefault().BasketId,'ccard',0)">
+                            <i class="bi bi-credit-card-2-back"></i> Kredi Kartı
+                        </button>
+                        <button type="button" class="btn btn-warning btn-sm " style="" data-id="@Model.FirstOrDefault().BasketId" onclick="payout(this,@Model.FirstOrDefault().BasketId,'open',0)">
+                            <i class="bi bi-door-open"></i> Açık Hesap
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm " style="" data-id="@Model.FirstOrDefault().BasketId" id="piecedpayment">
+                            <i class="bi bi-pie-chart"></i> Parçalı Ödeme
+                        </button>
+                    </div>
+
+                    <!--ödeme başlangıç -->
+                    <div class="tab-pane" id="OdemeSekli" style="display:none">
+                        <div class=" row m-0 mt-2" id="payment-design">
+                            <div class="col-12 pt-1 pb-1">
+                                <div class="main-traffic-detail-item">
+                                    <div>
+                                        <span class="font-weight-bold">Tutar</span> <span><span class="oranSpan font-weight-bold" style="color:black">0</span></span>
+                                    </div>
+                                    <div class="progress progress-bar-xs" style="background-color:white">
+                                      @*  <div aria-value-max="@String.Format("{0:F2}", Model.FirstOrDefault().Basket.InvoiceTotal +  Model.FirstOrDefault().Basket.InvoicTaxTotal).Replace(",",".")" aria-valuemin="0" aria-valuenow="20" class="progress-bar progress-bar-xs oranSpanPr bg-success" role="progressbar"></div>*@
+                                        <progress id="myProgress" style="width:100%;height:1.2rem" value="0" min="0" max="@String.Format("{0:F2}", Model.FirstOrDefault().Basket.InvoiceTotal +  Model.FirstOrDefault().Basket.InvoicTaxTotal).Replace(",",".")" class="class=" progress-bar progress-bar-xs oranSpanPr bg-success"></progress>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm">
+                                     <input type="number" id="paymentOran" name="paymentOran" class="form-control">
+                                </div>
+                                <div class="col-sm">
+                                    <select  id="paymentType" class="form-control" >
+                                        <option value="Nakit">Nakit</option>
+                                        <option value="Kredi Kartı">Kredi Kartı</option>
+                                        <option value="Sodexo">Sodexo</option>
+                                        <option value="Multinet">Multinet</option>
+                                        <option value="Ticked(Edenred)">Multinet</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm">
+                                    <button type="button" id="paymentAdd" data-line="1" class="btn btn-danger" style="min-height:33px"><i class="fa fa-plus"></i></button>
+                                </div>
+                            </div>
+                            <div class="col-12" style="margin-top:10px">
+                                <div class="table-responsive tasks">
+                                    <table class="table card-table table-vcenter text-nowrap border">
+                                        <tbody id="paymentTBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm">
+                            <button type="button" id="paymentSave" data-line="1" class="btn btn-success" style="min-height:33px;display:none"><i class="bi bi-asterisk"></i> Ödeme Tamamla </button>
+                        </div>
+                    </div>
+                    <!--ödeme son -->
+
+                </div>
+
+            </div>
+            <div class="nav-contentchart">
+                @*<a href="#" class="buttonodeme">Sepeti Tamamla</a>*@
+            </div>
+        </nav>
+        }
+        else
+        {
+        <div style="margin-top:40%;text-align: center;">
+
+            <span style="text-align: center;font-size: 20px;">Sepetinizde ürün yoktur..</span>
+            <br>
+            <img src="~/images/emptycart.gif" />
+
+            </div>
+        }
+    </div>
+
+
+<style type="text/css">
+    .containerchart {
+        height: 100vh-200px;
+        overflow-y: auto;
+    }
+
+    .open-navchart {
+   
+        width: 100%;
+        border-radius: 10px;
+        background-color: white;
+        height: 800px;
+    }
+
+    .navbar-bottomchart {
+        height: 800px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        bottom: -750px;
+        transition: all .5s;
+    }
+
+    .opened {
+        bottom: 245px;
+    }
+    
+</style>
+<script type="text/javascript"> 
+    $('#chartclick').click(function () {
+        $('.navbar-bottomchart').toggleClass("opened");
+     document.getElementById("closechart").style.display="block";
+        document.getElementById("upcart").style.display = "none";
+    });
+    $('#closechart').click(function () {
+        $('.navbar-bottomchart').toggleClass("opened");
+        document.getElementById("closechart").style.display = "none";
+        document.getElementById("upcart").style.display = "block";
+    });
+    
+   
+
+
+    // ödeme bloğu js
+  
+
+  
+
+
+
+    
+
+
+
+    // ödeme bloğu js
+</script>
+
+
